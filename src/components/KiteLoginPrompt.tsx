@@ -1,4 +1,4 @@
-﻿import { ExternalLink, RefreshCw } from "lucide-react";
+import { ExternalLink, RefreshCw } from "lucide-react";
 import type { LoginRequired } from "../api/backend";
 
 type Props = { login: LoginRequired; onRetry?: () => void };

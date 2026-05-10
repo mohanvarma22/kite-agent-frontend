@@ -1,4 +1,4 @@
-﻿import { LogOut, RefreshCw } from "lucide-react";
+import { LogOut, RefreshCw } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { getPortfolio, LoginRequiredError, requestKiteLogin, type LoginRequired, type Portfolio } from "../api/backend";

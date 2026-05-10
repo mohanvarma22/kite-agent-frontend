@@ -1,4 +1,4 @@
-﻿# kite-agent-frontend
+# kite-agent-frontend
 
 React + Vite frontend for the Kite Agent backend.
 

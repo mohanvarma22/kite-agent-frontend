@@ -1,4 +1,4 @@
-﻿import { RefreshCw, Wallet } from "lucide-react";
+import { RefreshCw, Wallet } from "lucide-react";
 import type { LoginRequired, Portfolio } from "../api/backend";
 import { KiteLoginPrompt } from "./KiteLoginPrompt";
 

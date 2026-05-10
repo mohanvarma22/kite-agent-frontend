@@ -1,4 +1,4 @@
-﻿import { Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { LoginRequiredError, sendChatMessage, type LoginRequired } from "../api/backend";
