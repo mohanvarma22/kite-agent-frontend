@@ -1,0 +1,4 @@
+﻿project_name = "kite-agent-frontend"
+aws_region   = "us-east-1"
+github_owner = "mohanvarma22"
+github_repo  = "kite-agent-frontend"
