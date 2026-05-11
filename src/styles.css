@@ -11,6 +11,7 @@ input { border: 1px solid #cbd5df; border-radius: 6px; color: #1e293b; font: inh
 .auth-panel h1, .top-bar h1, .side-panel h2 { margin: 0; }
 .auth-form, .auth-form label { display: grid; gap: 10px; }
 .auth-form { gap: 16px; }
+.kite-step { max-width: 620px; }
 .eyebrow { color: #b45309; font-size: .78rem; font-weight: 800; letter-spacing: 0; margin: 0 0 4px; text-transform: uppercase; }
 .app-shell { min-height: 100vh; padding: 18px; }
 .top-bar { align-items: center; background: #fff; border: 1px solid #d9e2ea; border-radius: 8px; display: flex; gap: 16px; justify-content: space-between; margin-bottom: 16px; padding: 16px 18px; }
