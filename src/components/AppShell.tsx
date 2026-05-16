@@ -2,13 +2,12 @@ import { LogOut, MessageSquarePlus, RefreshCw } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import {
-  createChatSession,
   getChatMessages,
   getPortfolio,
   listChatSessions,
   LoginRequiredError,
   type ChatMessage,
-  type ChatSession,
+  type DraftChatSession,
   type LoginRequired,
   type Portfolio
 } from "../api/backend";
@@ -26,8 +25,8 @@ export function AppShell({ session, initialPortfolio }: Props) {
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioError, setPortfolioError] = useState("");
   const [loginRequired, setLoginRequired] = useState<LoginRequired | null>(null);
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
-  const [chatSession, setChatSession] = useState<ChatSession | null>(null);
+  const [chatSessions, setChatSessions] = useState<DraftChatSession[]>([]);
+  const [chatSession, setChatSession] = useState<DraftChatSession | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(true);
   const [chatError, setChatError] = useState("");
@@ -58,9 +57,8 @@ export function AppShell({ session, initialPortfolio }: Props) {
 
     try {
       const sessions = await listChatSessions(session);
-      const activeSession = await createChatSession(session);
-      setChatSessions([activeSession, ...sessions]);
-      await selectChatSession(activeSession);
+      setChatSessions(sessions);
+      startDraftChat();
     } catch (err) {
       setChatError(err instanceof Error ? err.message : "Could not load chat history.");
       setChatMessages([]);
@@ -75,11 +73,14 @@ export function AppShell({ session, initialPortfolio }: Props) {
 
   async function refreshActiveChat() {
     if (!chatSession) return;
+    const sessions = await listChatSessions(session);
+    setChatSessions(sessions);
+    const persistedSession = sessions.find((item) => item.id === chatSession.id);
+    if (persistedSession) setChatSession(persistedSession);
     setChatMessages(await getChatMessages(session, chatSession.id));
-    setChatSessions(await listChatSessions(session));
   }
 
-  async function selectChatSession(nextSession: ChatSession) {
+  async function selectChatSession(nextSession: DraftChatSession) {
     setChatLoading(true);
     setChatError("");
 
@@ -95,19 +96,21 @@ export function AppShell({ session, initialPortfolio }: Props) {
   }
 
   async function startNewChat() {
-    setChatLoading(true);
     setChatError("");
+    startDraftChat();
+  }
 
-    try {
-      const nextSession = await createChatSession(session);
-      setChatSessions((current) => [nextSession, ...current]);
-      setChatSession(nextSession);
-      setChatMessages([]);
-    } catch (err) {
-      setChatError(err instanceof Error ? err.message : "Could not create a new chat.");
-    } finally {
-      setChatLoading(false);
-    }
+  function startDraftChat() {
+    const now = new Date().toISOString();
+    setChatSession({
+      id: crypto.randomUUID(),
+      title: "New chat",
+      created_at: now,
+      updated_at: now,
+      isDraft: true
+    });
+    setChatMessages([]);
+    setChatLoading(false);
   }
 
   function formatSessionTime(value: string) {
@@ -133,7 +136,7 @@ export function AppShell({ session, initialPortfolio }: Props) {
             </button>
           </div>
           <div className="history-list">
-            {chatSessions.length === 0 && <p className="muted">No previous chats yet.</p>}
+            {chatSessions.length === 0 && <p className="muted">No saved chats yet.</p>}
             {chatSessions.map((item) => (
               <button
                 key={item.id}

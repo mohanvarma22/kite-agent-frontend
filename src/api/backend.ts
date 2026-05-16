@@ -36,6 +36,10 @@ export type ChatSession = {
   updated_at: string;
 };
 
+export type DraftChatSession = ChatSession & {
+  isDraft?: boolean;
+};
+
 export type ChatMessage = {
   id: string;
   session_id: string;
