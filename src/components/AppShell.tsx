@@ -6,6 +6,7 @@ import {
   getPortfolio,
   listChatSessions,
   LoginRequiredError,
+  logoutKite,
   type ChatMessage,
   type DraftChatSession,
   type LoginRequired,
@@ -117,6 +118,14 @@ export function AppShell({ session, initialPortfolio }: Props) {
     return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
   }
 
+  async function logout() {
+    try {
+      await logoutKite(session);
+    } finally {
+      await supabase.auth.signOut();
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="top-bar">
@@ -124,7 +133,7 @@ export function AppShell({ session, initialPortfolio }: Props) {
         <div className="top-actions">
           <span className="user-email">{session.user.email}</span>
           <button type="button" className="secondary" onClick={loadPortfolio} disabled={portfolioLoading}><RefreshCw size={16} />Refresh</button>
-          <button type="button" onClick={() => supabase.auth.signOut()}><LogOut size={16} />Logout</button>
+          <button type="button" onClick={logout}><LogOut size={16} />Logout</button>
         </div>
       </header>
       <div className="dashboard-grid with-history">

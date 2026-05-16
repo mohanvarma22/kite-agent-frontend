@@ -96,6 +96,10 @@ export function requestKiteLogin(session: Session): Promise<LoginRequired> {
   return fetchWithAuth<LoginRequired>(session, "/auth/kite/login", { method: "POST" });
 }
 
+export function logoutKite(session: Session): Promise<{ status: string; runtime_stopped: boolean }> {
+  return fetchWithAuth<{ status: string; runtime_stopped: boolean }>(session, "/auth/kite/logout", { method: "POST" });
+}
+
 export function listChatSessions(session: Session): Promise<ChatSession[]> {
   return fetchWithAuth<ChatSession[]>(session, "/chat/sessions");
 }
