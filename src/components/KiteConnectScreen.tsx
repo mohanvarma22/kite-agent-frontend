@@ -1,7 +1,7 @@
 import { LogOut, MoveRight, RefreshCw } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { useState } from "react";
-import { getPortfolio, LoginRequiredError, type LoginRequired, type Portfolio } from "../api/backend";
+import { getPortfolio, LoginRequiredError, logoutKite, type LoginRequired, type Portfolio } from "../api/backend";
 import { supabase } from "../api/supabase";
 import { KiteLoginPrompt } from "./KiteLoginPrompt";
 
@@ -28,6 +28,14 @@ export function KiteConnectScreen({ session, onProceed }: Props) {
       else setError(err instanceof Error ? err.message : "Could not verify Kite login.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function logout() {
+    try {
+      await logoutKite(session);
+    } finally {
+      await supabase.auth.signOut();
     }
   }
 
@@ -65,7 +73,7 @@ export function KiteConnectScreen({ session, onProceed }: Props) {
             <MoveRight size={16} />
             Proceed to dashboard
           </button>
-          <button type="button" className="secondary" onClick={() => supabase.auth.signOut()}>
+          <button type="button" className="secondary" onClick={logout}>
             <LogOut size={16} />
             Logout
           </button>
