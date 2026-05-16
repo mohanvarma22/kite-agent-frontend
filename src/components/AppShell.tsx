@@ -1,4 +1,4 @@
-import { LogOut, RefreshCw } from "lucide-react";
+import { LogOut, MessageSquarePlus, RefreshCw } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import {
@@ -26,6 +26,7 @@ export function AppShell({ session, initialPortfolio }: Props) {
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioError, setPortfolioError] = useState("");
   const [loginRequired, setLoginRequired] = useState<LoginRequired | null>(null);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [chatSession, setChatSession] = useState<ChatSession | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(true);
@@ -55,11 +56,12 @@ export function AppShell({ session, initialPortfolio }: Props) {
 
     try {
       const sessions = await listChatSessions(session);
-      const activeSession = sessions[0] ?? await createChatSession(session);
-      setChatSession(activeSession);
-      setChatMessages(await getChatMessages(session, activeSession.id));
+      const activeSession = await createChatSession(session);
+      setChatSessions([activeSession, ...sessions]);
+      await selectChatSession(activeSession);
     } catch (err) {
       setChatError(err instanceof Error ? err.message : "Could not load chat history.");
+      setChatMessages([]);
     } finally {
       setChatLoading(false);
     }
@@ -72,6 +74,42 @@ export function AppShell({ session, initialPortfolio }: Props) {
   async function refreshActiveChat() {
     if (!chatSession) return;
     setChatMessages(await getChatMessages(session, chatSession.id));
+    setChatSessions(await listChatSessions(session));
+  }
+
+  async function selectChatSession(nextSession: ChatSession) {
+    setChatLoading(true);
+    setChatError("");
+
+    try {
+      setChatSession(nextSession);
+      setChatMessages(await getChatMessages(session, nextSession.id));
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : "Could not load chat messages.");
+      setChatMessages([]);
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  async function startNewChat() {
+    setChatLoading(true);
+    setChatError("");
+
+    try {
+      const nextSession = await createChatSession(session);
+      setChatSessions((current) => [nextSession, ...current]);
+      setChatSession(nextSession);
+      setChatMessages([]);
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : "Could not create a new chat.");
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  function formatSessionTime(value: string) {
+    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
   }
 
   return (
@@ -84,7 +122,29 @@ export function AppShell({ session, initialPortfolio }: Props) {
           <button type="button" onClick={() => supabase.auth.signOut()}><LogOut size={16} />Logout</button>
         </div>
       </header>
-      <div className="dashboard-grid">
+      <div className="dashboard-grid with-history">
+        <aside className="history-panel">
+          <div className="panel-header">
+            <h2>History</h2>
+            <button type="button" className="icon-button" onClick={startNewChat} disabled={chatLoading} title="New chat">
+              <MessageSquarePlus size={18} />
+            </button>
+          </div>
+          <div className="history-list">
+            {chatSessions.length === 0 && <p className="muted">No previous chats yet.</p>}
+            {chatSessions.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`history-item${chatSession?.id === item.id ? " active" : ""}`}
+                onClick={() => void selectChatSession(item)}
+              >
+                <span>{item.title}</span>
+                <small>{formatSessionTime(item.updated_at)}</small>
+              </button>
+            ))}
+          </div>
+        </aside>
         <ChatPanel
           session={session}
           chatSession={chatSession}
