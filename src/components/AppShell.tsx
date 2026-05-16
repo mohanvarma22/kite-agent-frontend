@@ -1,7 +1,17 @@
 import { LogOut, RefreshCw } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { getPortfolio, LoginRequiredError, type LoginRequired, type Portfolio } from "../api/backend";
+import {
+  createChatSession,
+  getChatMessages,
+  getPortfolio,
+  listChatSessions,
+  LoginRequiredError,
+  type ChatMessage,
+  type ChatSession,
+  type LoginRequired,
+  type Portfolio
+} from "../api/backend";
 import { supabase } from "../api/supabase";
 import { ChatPanel } from "./ChatPanel";
 import { PortfolioPanel } from "./PortfolioPanel";
@@ -16,6 +26,10 @@ export function AppShell({ session, initialPortfolio }: Props) {
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [portfolioError, setPortfolioError] = useState("");
   const [loginRequired, setLoginRequired] = useState<LoginRequired | null>(null);
+  const [chatSession, setChatSession] = useState<ChatSession | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(true);
+  const [chatError, setChatError] = useState("");
 
   async function loadPortfolio() {
     setPortfolioLoading(true);
@@ -35,6 +49,31 @@ export function AppShell({ session, initialPortfolio }: Props) {
     if (!initialPortfolio) void loadPortfolio();
   }, [session.access_token, initialPortfolio]);
 
+  async function loadInitialChat() {
+    setChatLoading(true);
+    setChatError("");
+
+    try {
+      const sessions = await listChatSessions(session);
+      const activeSession = sessions[0] ?? await createChatSession(session);
+      setChatSession(activeSession);
+      setChatMessages(await getChatMessages(session, activeSession.id));
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : "Could not load chat history.");
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadInitialChat();
+  }, [session.access_token]);
+
+  async function refreshActiveChat() {
+    if (!chatSession) return;
+    setChatMessages(await getChatMessages(session, chatSession.id));
+  }
+
   return (
     <main className="app-shell">
       <header className="top-bar">
@@ -46,7 +85,14 @@ export function AppShell({ session, initialPortfolio }: Props) {
         </div>
       </header>
       <div className="dashboard-grid">
-        <ChatPanel session={session} />
+        <ChatPanel
+          session={session}
+          chatSession={chatSession}
+          initialMessages={chatMessages}
+          loadingHistory={chatLoading}
+          historyError={chatError}
+          onMessageSaved={refreshActiveChat}
+        />
         <PortfolioPanel portfolio={portfolio} loginRequired={loginRequired} loading={portfolioLoading} error={portfolioError} onRefresh={loadPortfolio} />
       </div>
     </main>

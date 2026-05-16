@@ -29,6 +29,23 @@ export type ChatResponse = {
   order_draft: Record<string, unknown> | null;
 };
 
+export type ChatSession = {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  session_id: string;
+  role: "user" | "assistant";
+  content: string;
+  order_draft: Record<string, unknown> | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
 export class LoginRequiredError extends Error {
   details: LoginRequired;
 
@@ -73,6 +90,21 @@ export function getPortfolio(session: Session): Promise<Portfolio> {
 
 export function requestKiteLogin(session: Session): Promise<LoginRequired> {
   return fetchWithAuth<LoginRequired>(session, "/auth/kite/login", { method: "POST" });
+}
+
+export function listChatSessions(session: Session): Promise<ChatSession[]> {
+  return fetchWithAuth<ChatSession[]>(session, "/chat/sessions");
+}
+
+export function createChatSession(session: Session, title = "New chat"): Promise<ChatSession> {
+  return fetchWithAuth<ChatSession>(session, "/chat/sessions", {
+    method: "POST",
+    body: JSON.stringify({ title })
+  });
+}
+
+export function getChatMessages(session: Session, sessionId: string): Promise<ChatMessage[]> {
+  return fetchWithAuth<ChatMessage[]>(session, `/chat/sessions/${sessionId}/messages`);
 }
 
 export function sendChatMessage(session: Session, message: string, sessionId: string): Promise<ChatResponse> {
