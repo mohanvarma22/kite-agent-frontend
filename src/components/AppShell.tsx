@@ -37,7 +37,9 @@ export function AppShell({ session, initialPortfolio }: Props) {
     setPortfolioError("");
     setLoginRequired(null);
     try {
-      setPortfolio(await getPortfolio(session));
+      const nextPortfolio = await getPortfolio(session);
+      setPortfolio(nextPortfolio);
+      setLoginRequired(null);
     } catch (err) {
       if (err instanceof LoginRequiredError) setLoginRequired(err.details);
       else setPortfolioError(err instanceof Error ? err.message : "Could not load portfolio.");

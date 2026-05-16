@@ -19,7 +19,7 @@ export function PortfolioPanel({ portfolio, loginRequired, loading, error, onRef
         <div><p className="eyebrow">Portfolio</p><h2>Summary</h2></div>
         <button type="button" className="icon-button" onClick={onRefresh} disabled={loading} title="Refresh portfolio"><RefreshCw size={18} /></button>
       </div>
-      {loginRequired && <KiteLoginPrompt login={loginRequired} onRetry={onRefresh} />}
+      {loginRequired && !portfolio && <KiteLoginPrompt login={loginRequired} onRetry={onRefresh} />}
       {error && <p className="error-text">{error}</p>}
       {loading && <p className="muted">Loading portfolio...</p>}
       {portfolio && (
